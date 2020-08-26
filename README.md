@@ -4,6 +4,8 @@ A LEMP network of containers for local Laravel development.
 
 ## Usage
 
+In the rool of this project directory bring up the LEMP network of containers by issuing the following command in you terminal: `docker-compose up -d --build site`.
+
 After that completes, follow the steps from the [src/README.md](/src/README.md) file to get your Laravel project added in (or create a new blank one).
 
 Bringing up the Docker Compose network with site instead of just using up, ensures that only our site's containers are brought up at the start, instead of all of the command containers as well. The following are built for our web server, with their exposed ports detailed:
