@@ -1,11 +1,11 @@
 version: '3'
 
 networks:
-  laravel:
+  idke:
 
 services:
-  site:
-    image: nginx:stable
+  nginx:
+    image: nginx:1.18-alpine
     container_name: nginx
     ports:
       - "8080:80"
@@ -13,34 +13,42 @@ services:
       - ./src:/var/www/html
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - php
+      - idke
       - mysql
     networks:
-      - laravel
+      - idke
 
-  mysql:
-    image: mysql:5.7.29
-    container_name: mysql
+  mariadb:
+    image: mariadb:10.3.34
+    container_name: mariadb
     restart: unless-stopped
     tty: true
     ports:
       - "3306:3306"
     environment:
-      MYSQL_DATABASE: homestead
-      MYSQL_USER: homestead
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: secret
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SERVICE_TAGS: ${SERVICE_TAGS}
+      SERVICE_NAME: ${SERVICE_NAME}
     networks:
-      - laravel
+      - idke
 
-  php:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASS}
+
+  idke:
     build:
       context: .
-      dockerfile: php.dockerfile
+      dockerfile: Dockerfile
       args:
-        user: liam
+        user: ocr
         uid: 1000
     container_name: php
     volumes:
@@ -48,10 +56,10 @@ services:
     ports:
       - "9000:9000"
     networks:
-      - laravel
+      - idke
 
   composer:
-    image: composer:latest
+    image: composer:2.4.2
     container_name: composer
     volumes:
       - ./src:/var/www/html
@@ -59,10 +67,10 @@ services:
     depends_on:
       - php
     networks:
-      - laravel
+      - idke
 
   npm:
-    image: node:13.7
+    image: node:10.17.0-alpine
     container_name: npm
     volumes:
       - ./src:/var/www/html
@@ -72,9 +80,9 @@ services:
   artisan:
     build:
       context: .
-      dockerfile: php.dockerfile
+      dockerfile: Dockerfile
       args:
-        user: liam
+        user: ocr
         uid: 1000
     container_name: artisan
     volumes:
@@ -84,4 +92,4 @@ services:
     working_dir: /var/www/html
     entrypoint: ['php', '/var/www/html/artisan']
     networks:
-      - laravel
+      - idke
